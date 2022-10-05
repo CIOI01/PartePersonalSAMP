@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>MapsActivity.kt</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6897bb;}
+.s3 { color: #808080;}
+.s4 { color: #6a8759;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+MapsActivity.kt</font>
+</center></td></tr></table>
+<pre><span class="s0">package </span><span class="s1">com.example.mapasosamp</span>
+
+<span class="s1">import android.Manifest</span>
+<span class="s1">import android.content.pm.PackageManager</span>
+<span class="s1">import android.location.Location</span>
+<span class="s1">import androidx.appcompat.app.AppCompatActivity</span>
+<span class="s1">import android.os.Bundle</span>
+<span class="s1">import androidx.core.app.ActivityCompat</span>
+
+<span class="s1">import com.google.android.gms.maps.CameraUpdateFactory</span>
+<span class="s1">import com.google.android.gms.maps.GoogleMap</span>
+<span class="s1">import com.google.android.gms.maps.OnMapReadyCallback</span>
+<span class="s1">import com.google.android.gms.maps.SupportMapFragment</span>
+<span class="s1">import com.google.android.gms.maps.model.LatLng</span>
+<span class="s1">import com.google.android.gms.maps.model.MarkerOptions</span>
+<span class="s1">import com.example.mapasosamp.databinding.ActivityMapsBinding</span>
+<span class="s1">import com.google.android.gms.location.FusedLocationProviderClient</span>
+<span class="s1">import com.google.android.gms.location.LocationServices</span>
+<span class="s1">import com.google.android.gms.maps.model.Marker</span>
+
+<span class="s0">class </span><span class="s1">MapsActivity : AppCompatActivity()</span><span class="s0">, </span><span class="s1">OnMapReadyCallback</span><span class="s0">, </span><span class="s1">GoogleMap.OnMarkerClickListener {</span>
+
+    <span class="s1">private lateinit </span><span class="s0">var </span><span class="s1">mMap: GoogleMap</span>
+    <span class="s1">private lateinit </span><span class="s0">var </span><span class="s1">binding: ActivityMapsBinding</span>
+    <span class="s1">private lateinit </span><span class="s0">var </span><span class="s1">lastlocation: Location</span>
+    <span class="s1">private lateinit </span><span class="s0">var </span><span class="s1">fusedLocationClient : FusedLocationProviderClient</span>
+
+    <span class="s1">companion </span><span class="s0">object</span><span class="s1">{</span>
+        <span class="s1">private const </span><span class="s0">val </span><span class="s1">LOCATION_REQUEST_CODE = </span><span class="s2">1</span>
+    <span class="s1">}</span>
+
+
+    <span class="s1">override </span><span class="s0">fun </span><span class="s1">onCreate(savedInstanceState: Bundle?) {</span>
+        <span class="s0">super</span><span class="s1">.onCreate(savedInstanceState)</span>
+
+        <span class="s1">binding = ActivityMapsBinding.inflate(layoutInflater)</span>
+        <span class="s1">setContentView(binding.root)</span>
+
+        <span class="s3">// Obtain the SupportMapFragment and get notified when the map is ready to be used.</span>
+        <span class="s0">val </span><span class="s1">mapFragment = supportFragmentManager</span>
+            <span class="s1">.findFragmentById(R.id.map) </span><span class="s0">as </span><span class="s1">SupportMapFragment</span>
+        <span class="s1">mapFragment.getMapAsync(</span><span class="s0">this</span><span class="s1">)</span>
+
+        <span class="s1">fusedLocationClient = LocationServices.getFusedLocationProviderClient(</span><span class="s0">this</span><span class="s1">)</span>
+    <span class="s1">}</span>
+
+    <span class="s1">override </span><span class="s0">fun </span><span class="s1">onMapReady(googleMap: GoogleMap) {</span>
+        <span class="s1">mMap = googleMap</span>
+
+        <span class="s1">mMap.uiSettings.isZoomControlsEnabled = </span><span class="s0">true</span>
+        <span class="s1">mMap.setOnMarkerClickListener(</span><span class="s0">this</span><span class="s1">)</span>
+
+        <span class="s1">setUpMap()</span>
+    <span class="s1">}</span>
+
+    <span class="s1">private </span><span class="s0">fun </span><span class="s1">setUpMap(){</span>
+
+        <span class="s0">if </span><span class="s1">(ActivityCompat.checkSelfPermission(</span>
+                <span class="s0">this,</span>
+                <span class="s1">Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {</span>
+
+            <span class="s1">ActivityCompat.requestPermissions(</span><span class="s0">this, </span><span class="s1">arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION)</span><span class="s0">, </span><span class="s1">LOCATION_REQUEST_CODE)</span>
+            <span class="s0">return</span>
+        <span class="s1">}</span>
+        <span class="s1">mMap.isMyLocationEnabled = </span><span class="s0">true</span>
+        <span class="s1">fusedLocationClient.lastLocation.addOnSuccessListener(</span><span class="s0">this</span><span class="s1">) { location -&gt;</span>
+
+            <span class="s0">if </span><span class="s1">(location != </span><span class="s0">null</span><span class="s1">){</span>
+                <span class="s1">lastlocation = location</span>
+                <span class="s0">val </span><span class="s1">currentLatLong = LatLng(location.latitude</span><span class="s0">, </span><span class="s1">location.longitude)</span>
+                <span class="s1">placeMarkerOnMap(currentLatLong)</span>
+                <span class="s1">mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLong</span><span class="s0">, </span><span class="s2">12f</span><span class="s1">))</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+    <span class="s1">}</span>
+
+    <span class="s1">private </span><span class="s0">fun </span><span class="s1">placeMarkerOnMap(currentLatLong: LatLng) {</span>
+        <span class="s0">val </span><span class="s1">markerOptions = MarkerOptions().position(currentLatLong)</span>
+        <span class="s1">markerOptions.title(</span><span class="s4">&quot;</span><span class="s0">$</span><span class="s1">currentLatLong</span><span class="s4">&quot;</span><span class="s1">)</span>
+        <span class="s1">mMap.addMarker(markerOptions)</span>
+    <span class="s1">}</span>
+
+    <span class="s1">override </span><span class="s0">fun </span><span class="s1">onMarkerClick(p0: Marker) = </span><span class="s0">false</span>
+
+
+<span class="s1">}</span></pre>
+</body>
+</html>
